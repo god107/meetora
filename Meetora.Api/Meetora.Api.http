@@ -1,0 +1,6 @@
+@Meetora.Api_HostAddress = http://localhost:0
+
+GET {{Meetora.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: meetora-postgres
+    environment:
+      POSTGRES_DB: meetora
+      POSTGRES_USER: meetora
+      POSTGRES_PASSWORD: meetora
+    ports:
+      - "5432:5432"
+    volumes:
+      - meetora_pgdata:/var/lib/postgresql/data
+
+volumes:
+  meetora_pgdata:
