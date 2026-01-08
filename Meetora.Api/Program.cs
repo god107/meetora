@@ -32,9 +32,12 @@ await using (var scope = app.Services.CreateAsyncScope())
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-}
 
-app.UseHttpsRedirection();
+    if (int.TryParse(app.Configuration["ASPNETCORE_HTTPS_PORT"], out var httpsPort) && httpsPort > 0)
+    {
+        app.UseHttpsRedirection();
+    }
+}
 
 app.MapControllers();
 

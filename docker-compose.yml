@@ -1,4 +1,25 @@
 services:
+  api:
+    build:
+      context: .
+      dockerfile: Meetora.Api/Dockerfile
+    container_name: meetora-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=meetora;Username=meetora;Password=meetora
+    ports:
+      - "5050:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/health/db"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
   postgres:
     image: postgres:16-alpine
     container_name: meetora-postgres
@@ -10,6 +31,11 @@ services:
       - "5432:5432"
     volumes:
       - meetora_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
 volumes:
   meetora_pgdata:
