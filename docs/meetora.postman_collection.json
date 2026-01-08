@@ -1,0 +1,231 @@
+{
+  "info": {
+    "name": "Meetora API (MVP)",
+    "_postman_id": "b3d0d8ef-8af7-4c2c-ae63-2c52b09d7b7a",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5050" },
+    { "key": "googleIdToken", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "proposalId", "value": "" },
+    { "key": "publicToken", "value": "" },
+    { "key": "voterId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "DB Health",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health/db",
+              "host": ["{{baseUrl}}"],
+              "path": ["health", "db"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Google Login (ID token -> JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.accessToken) {",
+                  "    pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  }",
+                  "  if (json && json.user && json.user.id) {",
+                  "    pm.collectionVariables.set('userId', json.user.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"{{googleIdToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/google",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "google"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizer (Authenticated)",
+      "item": [
+        {
+          "name": "List Proposals",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/proposals",
+              "host": ["{{baseUrl}}"],
+              "path": ["proposals"]
+            }
+          }
+        },
+        {
+          "name": "Create Proposal",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.id) pm.collectionVariables.set('proposalId', json.id);",
+                  "  if (json && json.publicToken) pm.collectionVariables.set('publicToken', json.publicToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Team sync\",\n  \"description\": \"Pick a time that works for everyone\",\n  \"timeOptions\": [\n    {\n      \"startAt\": \"2026-01-10T16:00:00Z\",\n      \"endAt\": \"2026-01-10T16:30:00Z\"\n    },\n    {\n      \"startAt\": \"2026-01-11T16:00:00Z\",\n      \"endAt\": \"2026-01-11T16:30:00Z\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/proposals",
+              "host": ["{{baseUrl}}"],
+              "path": ["proposals"]
+            }
+          }
+        },
+        {
+          "name": "Get Proposal",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/proposals/{{proposalId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["proposals", "{{proposalId}}"]
+            }
+          }
+        },
+        {
+          "name": "Get Proposal Votes (per voter)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/proposals/{{proposalId}}/votes",
+              "host": ["{{baseUrl}}"],
+              "path": ["proposals", "{{proposalId}}", "votes"]
+            }
+          }
+        },
+        {
+          "name": "Close Proposal",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/proposals/{{proposalId}}/close",
+              "host": ["{{baseUrl}}"],
+              "path": ["proposals", "{{proposalId}}", "close"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public (No Auth)",
+      "item": [
+        {
+          "name": "Get Public Poll",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/public/polls/{{publicToken}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["public", "polls", "{{publicToken}}"]
+            }
+          }
+        },
+        {
+          "name": "Submit Votes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  if (json && json.voterId) pm.collectionVariables.set('voterId', json.voterId);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"voterId\": \"{{voterId}}\",\n  \"voterName\": \"Alex\",\n  \"timeOptionIds\": []\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/public/polls/{{publicToken}}/votes",
+              "host": ["{{baseUrl}}"],
+              "path": ["public", "polls", "{{publicToken}}", "votes"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
